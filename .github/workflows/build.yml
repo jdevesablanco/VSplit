@@ -1,0 +1,43 @@
+name: build
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tests (MIDI parser/writer, voice splitting, export)
+        run: swift test
+
+      - name: Build VSplit.app (universal, ad-hoc signed)
+        run: |
+          V="${GITHUB_REF_NAME#v}"; [[ "$GITHUB_REF" == refs/tags/v* ]] || V="0.0.0-dev"
+          VERSION="$V" Scripts/build-app.sh
+          VERSION="$V" Scripts/make-dmg.sh
+          VERSION="$V" Scripts/make-pkg.sh
+          # Nombres sin versión: los enlaces /releases/latest/download/... del README no caducan
+          cp build/VSplit-$V.dmg build/VSplit.dmg
+          cp build/VSplit-$V.pkg build/VSplit.pkg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VSplit-installers
+          path: |
+            build/*.dmg
+            build/*.pkg
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/*.dmg
+            build/*.pkg

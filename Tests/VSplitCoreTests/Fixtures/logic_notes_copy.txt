@@ -1,0 +1,44 @@
+ 	  	 1 1 1 1 	 Note	 1	 G3	 83	 0 3 3 130	
+			 Rel Vel			 64		
+ 	  	 1 1 1 13 	 Note	 1	 C3	 83	 0 3 3 108	
+			 Rel Vel			 64		
+ 	  	 1 4 4 219 	 Note	 1	 A2	 99	 0 3 3 142	
+			 Rel Vel			 64		
+ 	  	 1 4 4 227 	 Note	 1	 E3	 99	 0 3 3 134	
+			 Rel Vel			 64		
+ 	  	 3 1 1 1 	 Note	 1	 C3	 98	 0 3 3 120	
+			 Rel Vel			 64		
+ 	  	 3 1 1 1 	 Note	 1	 A3	 98	 0 3 3 120	
+			 Rel Vel			 64		
+ 	  	 3 1 1 7 	 Note	 1	 F2	 98	 0 3 3 114	
+			 Rel Vel			 64		
+ 	  	 3 4 4 227 	 Note	 1	 G2	 75	 0 3 3 134	
+			 Rel Vel			 64		
+ 	  	 4 1 1 1 	 Note	 1	 D3	 75	 0 3 3 120	
+			 Rel Vel			 64		
+ 	  	 4 1 1 11 	 Note	 1	 B3	 75	 0 3 3 110	
+			 Rel Vel			 64		
+ 	  	 4 4 4 221 	 Note	 1	 C3	 91	 0 3 3 140	
+			 Rel Vel			 64		
+ 	  	 5 1 1 5 	 Note	 1	 C2	 91	 0 3 3 116	
+			 Rel Vel			 64		
+ 	  	 5 1 1 13 	 Note	 1	 G3	 91	 0 3 3 108	
+			 Rel Vel			 64		
+ 	  	 5 1 1 23 	 Note	 1	 E4	 91	 0 3 3 98	
+			 Rel Vel			 64		
+ 	  	 5 4 4 221 	 Note	 1	 C4	 76	 0 3 3 140	
+			 Rel Vel			 64		
+ 	  	 6 1 1 7 	 Note	 1	 E3	 76	 0 3 3 114	
+			 Rel Vel			 64		
+ 	  	 6 1 1 9 	 Note	 1	 A2	 76	 0 3 3 112	
+			 Rel Vel			 64		
+ 	  	 6 1 1 15 	 Note	 1	 A1	 76	 0 3 3 106	
+			 Rel Vel			 64		
+ 	  	 6 4 4 221 	 Note	 1	 D2	 83	 0 3 3 140	
+			 Rel Vel			 64		
+ 	  	 6 4 4 225 	 Note	 1	 D3	 83	 0 3 3 136	
+			 Rel Vel			 64		
+ 	  	 6 4 4 233 	 Note	 1	 F4	 83	 0 3 3 128	
+			 Rel Vel			 64		
+ 	  	 7 1 1 15 	 Note	 1	 A3	 83	 0 3 3 106	
+			 Rel Vel			 64		
