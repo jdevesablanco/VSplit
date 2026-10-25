@@ -13,8 +13,8 @@ cask "vsplit" do
   binary "#{appdir}/VSplit.app/Contents/Resources/vsplit"
 
   # La app no está notarizada (no hay cuenta de Apple Developer de pago): sin esto macOS la bloquearía al abrirla.
-  postflight do
-    system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{appdir}/VSplit.app"]
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/VSplit.app"], must_succeed: false
   end
 
   uninstall quit:      "io.github.jdevesablanco.VSplit",
