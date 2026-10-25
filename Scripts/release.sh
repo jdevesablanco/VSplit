@@ -7,12 +7,14 @@ cd "$(dirname "$0")/.."
 V="${1:?uso: Scripts/release.sh X.Y.Z}"
 sed -i '' "s|version \"[0-9.]*\"|version \"$V\"|" homebrew/Casks/vsplit.rb
 sed -i '' "s|static let version = \"[0-9.]*\"|static let version = \"$V\"|" Sources/VSplitCore/Engine/Version.swift
-git add -A && git commit -m "Release v$V" && git tag "v$V" && git push origin main "v$V"
+git add -A
+git diff --cached --quiet || git commit -m "Release v$V"   # sin cambios si la versión ya era esa
+git tag "v$V" && git push origin main "v$V"
 
 echo "Esperando a que la CI publique el DMG…"
 DMG="https://github.com/jdevesablanco/VSplit/releases/download/v$V/VSplit-$V.dmg"
 until curl -sfIL "$DMG" >/dev/null; do sleep 20; done
 DMG_SHA="$(curl -sL "$DMG" | shasum -a 256 | cut -d' ' -f1)"
-sed -i '' "s|sha256 \"[0-9a-zA-Z_:]*\"|sha256 \"$DMG_SHA\"|" homebrew/Casks/vsplit.rb
+sed -i '' -E "s/sha256 (:no_check|\"[0-9a-f]*\")/sha256 \"$DMG_SHA\"/" homebrew/Casks/vsplit.rb
 echo "Cask sha256 = $DMG_SHA"
 echo "Copia homebrew/Casks/vsplit.rb a jdevesablanco/homebrew-tap y haz push."
