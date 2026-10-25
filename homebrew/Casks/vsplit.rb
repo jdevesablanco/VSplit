@@ -1,6 +1,6 @@
 cask "vsplit" do
   version "1.0.0"
-  sha256 :no_check
+  sha256 "6395eb5eaaf27ef77cb28c5768541d806d0467ef913211e3f784677cebe785d5"
 
   url "https://github.com/jdevesablanco/VSplit/releases/download/v#{version}/VSplit-#{version}.dmg"
   name "VSplit"
