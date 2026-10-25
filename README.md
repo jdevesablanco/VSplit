@@ -47,7 +47,7 @@ You can switch the tutorial between Spanish and English (top right) and open it 
    - *Copy & paste*: in Logic's Piano Roll press ⌘A ⌘C, then ⌘V in VSplit. Tempo and meter are read from Logic and the clip starts at the bar of its first note (VSplit shows which bar it came from).
    - *Watch folder*: in Logic, *File › Export › Selection as MIDI File…* into `Documents › VSplit`. VSplit opens with it, on top of Logic.
    - Or drop / open (⌘O) any `.mid`.
-2. **Split** with the two knobs: **Voices** (starts at the number detected) and **Mode** — *Auto* (2 voices alternate fairly, 3 or more split by lines), *Alternate*, *Lines*, *Register*, *Channel*. Changes apply when you let go; ⌘Z undoes them.
+2. **Split** with the two knobs: **Voices** (starts at the number detected) and **Mode** — *Auto* (2 voices alternate fairly, 3 or more split by lines), *Alternate*, *Lines*, *Register*, *Channel*. Changes apply when you let go; ⌘Z undoes them. To always start with the same setup (say, 2 voices in Auto), set the knobs and choose **⋯ › Set … as Default**.
 3. **Fix by hand** if you want: *Paint* (B) turns everything you touch into the active voice (pick it with 1–9); *Draw* (D) adds notes and changes their length with smart snap; *Select* (V) and Logic's shortcuts.
 4. **Drag back**: drag a voice's icon into Logic (one region), or the icon at the top right for all voices (one new track each). Drop them at the bar VSplit shows and they land in place. VSplit hides while you drag and comes back afterwards.
 

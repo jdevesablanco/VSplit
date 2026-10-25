@@ -51,6 +51,14 @@ enum Permissions {
     static var accessibility: Bool { AXIsProcessTrusted() }
 
     static func requestAccessibility() {
+        // Una entrada antigua (de otra versión de la app) sale activada en Ajustes pero no vale: se borra para que macOS pregunte de nuevo.
+        if !AXIsProcessTrusted(), let id = Bundle.main.bundleIdentifier {
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+            p.arguments = ["reset", "Accessibility", id]
+            p.standardOutput = FileHandle.nullDevice; p.standardError = FileHandle.nullDevice
+            try? p.run(); p.waitUntilExit()
+        }
         let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(opts)
         if !AXIsProcessTrusted(), let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {

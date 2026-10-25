@@ -38,6 +38,13 @@ struct ContentView: View {
         .sheet(isPresented: Binding(get: { model.pending != nil }, set: { if !$0 { model.pending = nil } })) {
             TrackPicker(model: model)
         }
+        .overlay {
+            if let a = model.arrival, !model.showOnboarding {
+                ArrivalOverlay(arrival: a) { withAnimation(.easeIn(duration: 0.3)) { if model.arrival?.id == a.id { model.arrival = nil } } }
+                    .id(a.id)
+                    .transition(.asymmetric(insertion: .identity, removal: .opacity.combined(with: .scale(scale: 1.03))))
+            }
+        }
         .overlay { if model.showOnboarding { OnboardingView(model: model).transition(.opacity) } }
         .background(WindowAccessor { w in if model.window !== w { model.window = w } })
     }
@@ -85,6 +92,12 @@ struct Header: View {
                     Button("Export All Voices to Folder…") { model.exportAllToFolder() }.disabled(!model.hasDocument)
                     Button("Export Multitrack MIDI…") { model.exportMultitrack() }.disabled(!model.hasDocument)
                     Divider()
+                    Button("Set \(model.voices.count) Voices · \(model.params.mode.title) as Default") { model.setCurrentAsDefault() }
+                        .disabled(!model.hasDocument || (model.defaultVoiceCount == model.voices.count && model.defaultMode == model.params.mode))
+                    if let n = model.defaultVoiceCount {
+                        Button("Detect Voices Again (Default: \(n) · \((model.defaultMode ?? model.params.mode).title))") { model.clearDefault() }
+                    }
+                    Divider()
                     Toggle("Keep Above Other Apps", isOn: $model.keepAbove)
                     Toggle("Open VSplit When You Export From Logic", isOn: $model.autoOpenFromFolder)
                     Button("Show Tutorial") { model.showOnboarding = true }
@@ -108,7 +121,7 @@ struct Header: View {
                     .frame(width: 34, height: 24)
                 }
             }
-            .padding(.horizontal, 12)
+            .padding(.leading, 12)  // a la derecha, alineado con el borde de los paneles
             HStack(spacing: 6) {
                 Text(model.hasDocument ? model.title : "")
                     .font(.system(size: 11, weight: .medium))
@@ -220,28 +233,6 @@ struct Notices: View {
                     Spacer()
                 }
             }
-            if model.pastedText != nil {
-                strip(icon: "doc.on.clipboard", tint: Theme.muted) {
-                    Text(model.pasteReadFromLogic
-                         ? String(localized: "Pasted from Logic, bar \(model.pasteOriginBar ?? 1) — drop the voices back at that bar. Tempo and meter read from Logic:")
-                         : String(localized: "Pasted from Logic, bar \(model.pasteOriginBar ?? 1) — drop the voices back at that bar. Check tempo and meter:"))
-                        .lineLimit(1)
-                    Spacer()
-                    Picker("Meter", selection: Binding(get: { "\(model.pasteOptions.numerator ?? 4)/\(model.pasteOptions.denominator)" }, set: { v in
-                        let p = v.split(separator: "/").compactMap { Int($0) }
-                        if p.count == 2 { model.reinterpretPaste(numerator: p[0], denominator: p[1]) }
-                    })) {
-                        ForEach(["2/4", "3/4", "4/4", "5/4", "6/8", "7/8", "9/8", "12/8"], id: \.self) { Text($0).tag($0) }
-                    }
-                    .labelsHidden()
-                    .frame(width: 66)
-                    TextField("BPM", value: Binding(get: { model.pasteOptions.bpm }, set: { model.reinterpretPaste(bpm: $0) }), format: .number.precision(.fractionLength(0...2)))
-                        .textFieldStyle(.plain)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 40)
-                    Text("BPM").foregroundStyle(Theme.muted)
-                }
-            }
         }
     }
 
@@ -309,6 +300,7 @@ struct TransportBar: View {
                 .buttonStyle(IconStyle(on: model.metronome))
                 .help("Metronome (⌘K). Right-click: sound and volume")
                 .contextMenu { MetronomeMenu(model: model) }
+            MeterField(model: model)
             BPMField(model: model)
             Menu {
                 ForEach(PreviewInstrument.allCases) { inst in
@@ -478,6 +470,37 @@ struct MetronomeMenu: View {
 }
 
 /// Tempo de la preview: arrastra arriba/abajo para cambiarlo; doble clic para escribirlo.
+/// Compás, en la misma caja que el tempo. Con notas pegadas se puede cambiar (Logic no lo copia si no hay Accesibilidad).
+struct MeterField: View {
+    @Bindable var model: AppModel
+
+    var body: some View {
+        Menu {
+            ForEach(["2/4", "3/4", "4/4", "5/4", "6/8", "7/8", "9/8", "12/8"], id: \.self) { m in
+                Button { set(m) } label: {
+                    if model.meterLabel == m { Label(m, systemImage: "checkmark") } else { Text(m) }
+                }
+            }
+        } label: {
+            Text(model.meterLabel).font(Theme.din(15)).padding(.top, 2)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .padding(.horizontal, 8)
+        .frame(height: 24)
+        .background(RoundedRectangle(cornerRadius: 5).fill(Color.black.opacity(0.45)))
+        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Theme.lineStrong))
+        .disabled(model.pastedText == nil)
+        .help("Meter")
+    }
+
+    private func set(_ m: String) {
+        let p = m.split(separator: "/").compactMap { Int($0) }
+        if p.count == 2 { model.reinterpretPaste(numerator: p[0], denominator: p[1]) }
+    }
+}
+
 struct BPMField: View {
     @Bindable var model: AppModel
     @State private var editing = false
@@ -499,9 +522,9 @@ struct BPMField: View {
                     .onChange(of: focused) { _, f in if !f { commit() } }
             } else {
                 Text(format(model.tempoBPM))
-                    .font(Theme.din(15))
+                    .font(Theme.din(15).monospacedDigit())
                     .padding(.top, 2)
-                    .frame(width: 40, alignment: .trailing)
+                    .frame(minWidth: 24)
             }
             Text("BPM").font(Theme.din(11)).padding(.top, 2).foregroundStyle(Theme.faint)
         }

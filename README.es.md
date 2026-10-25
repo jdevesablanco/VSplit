@@ -47,7 +47,7 @@ El tutorial se puede ver en español o en inglés (arriba a la derecha) y se vue
    - *Copiar y pegar*: en el Piano Roll de Logic ⌘A ⌘C, y ⌘V en VSplit. El tempo y el compás se leen de Logic y el clip empieza en el compás de su primera nota (VSplit te dice de qué compás venía).
    - *Carpeta vigilada*: en Logic, *Archivo › Exportar › Selección como archivo MIDI…* en `Documentos › VSplit`. VSplit se abre con él, encima de Logic.
    - O suelta / abre (⌘O) cualquier `.mid`.
-2. **Reparte** con los dos knobs: **Voces** (empieza en las detectadas) y **Modo**: *Auto* (con 2 voces alterna de forma justa, con 3 o más separa por líneas), *Alternar*, *Líneas*, *Registro*, *Canal*. Se aplica al soltar el knob; ⌘Z lo deshace.
+2. **Reparte** con los dos knobs: **Voces** (empieza en las detectadas) y **Modo**: *Auto* (con 2 voces alterna de forma justa, con 3 o más separa por líneas), *Alternar*, *Líneas*, *Registro*, *Canal*. Se aplica al soltar el knob; ⌘Z lo deshace. Para empezar siempre igual (por ejemplo, 2 voces en Auto), ponlos así y elige **⋯ › Usar … por defecto**.
 3. **Retoca a mano** si quieres: *Pintar* (B) pasa a la voz activa todo lo que tocas (elígela con 1–9); *Dibujar* (D) añade notas y cambia su duración con ajuste inteligente; *Seleccionar* (V) y los atajos de Logic.
 4. **Devuélvelo**: arrastra el icono de una voz a Logic (una región) o el icono de arriba a la derecha para todas (una pista nueva por voz). Suéltalas en el compás que indica VSplit y caerán en su sitio. VSplit se oculta mientras arrastras y vuelve después.
 

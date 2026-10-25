@@ -382,3 +382,13 @@
 "or export MIDI from Logic to Documents › VSplit, drop a .mid here ·" = "o exporta el MIDI desde Logic a Documentos › VSplit, suelta un .mid aquí ·";
 "Open VSplit When You Export From Logic" = "Abrir VSplit al exportar desde Logic";
 "Show Tutorial" = "Mostrar tutorial";
+
+/* Llegada de un clip */
+"New MIDI in Documents › VSplit" = "MIDI nuevo en Documentos › VSplit";
+"MIDI file" = "Archivo MIDI";
+"%lld notes · %lld voices" = "%lld notas · %lld voces";
+"from bar %lld" = "desde el compás %lld";
+
+/* Voces y modo por defecto */
+"Set %lld Voices · %@ as Default" = "Usar %lld voces · %@ por defecto";
+"Detect Voices Again (Default: %lld · %@)" = "Volver a detectar las voces (ahora: %lld · %@)";

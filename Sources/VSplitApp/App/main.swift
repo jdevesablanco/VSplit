@@ -44,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     case "installAgent": m.autoOpenFromFolder = true
                     case "onboarding": m.showOnboarding = true
                     case "noOnboarding": m.showOnboarding = false
+                    case "arrival": if let d = m.doc { m.arrival = Arrival(source: .folder, document: d, name: m.baseName, originBar: 9) }
                     case "step1": m.onboardingStep = 1
                     case "step2": m.onboardingStep = 2
                     case "step3": m.onboardingStep = 3

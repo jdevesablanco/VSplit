@@ -29,9 +29,16 @@ cp -R Resources/es.lproj Resources/en.lproj "$APP/Contents/Resources/"
 sed -e "s/@BUNDLE_ID@/$BUNDLE_ID/g" -e "s/@VERSION@/$VERSION/g" Resources/Info.plist.template > "$APP/Contents/Info.plist"
 
 OPTS=()
-if [[ "$SIGN_ID" != "-" ]]; then OPTS=(--options runtime --timestamp); fi
+APP_OPTS=()
+if [[ "$SIGN_ID" != "-" ]]; then
+  OPTS=(--options runtime --timestamp); APP_OPTS=("${OPTS[@]}")
+else
+  # Ad-hoc: el requisito por defecto es el hash del binario, y macOS olvidaría el permiso de Accesibilidad
+  # en cada actualización. Con el identificador como requisito el permiso se conserva entre versiones.
+  APP_OPTS=(-r="designated => identifier \"$BUNDLE_ID\"")
+fi
 codesign --force --sign "$SIGN_ID" ${OPTS[@]+"${OPTS[@]}"} "$APP/Contents/Resources/vsplit"
-codesign --force --sign "$SIGN_ID" ${OPTS[@]+"${OPTS[@]}"} "$APP"
+codesign --force --sign "$SIGN_ID" ${APP_OPTS[@]+"${APP_OPTS[@]}"} "$APP"
 codesign --verify --deep --strict "$APP" && echo "✓ firma verificada ($([[ "$SIGN_ID" == "-" ]] && echo ad-hoc || echo "$SIGN_ID"))"
 lipo -archs "$APP/Contents/MacOS/VSplit"
 echo "✓ $APP"

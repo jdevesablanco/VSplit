@@ -26,9 +26,8 @@ struct OnboardingView: View {
                     Spacer()
                     LangSwitch(lang: $model.onboardingLang)
                 }
-                .padding(.horizontal, 18)
-                .padding(.top, 12)
-                .frame(height: 40)
+                .padding(.trailing, 22)   // mismo margen que el botón de Siguiente abajo
+                .padding(.top, 16)
                 .background(WindowDragArea())
 
                 Group {
@@ -47,6 +46,7 @@ struct OnboardingView: View {
                 footer
             }
         }
+        .ignoresSafeArea(.container, edges: .top)
         .foregroundStyle(Theme.text)
         .onReceive(timer) { _ in tick += 1 }   // refresca el estado de los permisos
     }
@@ -71,11 +71,13 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer(minLength: 0)
             title(tr("1 · Trae el MIDI de Logic", "1 · Bring the MIDI from Logic"))
+            Text(tr("Tres formas, elige una:", "Three ways, pick one:")).font(.system(size: 12.5)).foregroundStyle(Theme.text.opacity(0.8))
             HStack(alignment: .top, spacing: 12) {
-                way("doc.on.clipboard", tr("Copiar y pegar", "Copy and paste"), tr("En el Piano Roll de Logic: ⌘A ⌘C. Aquí: ⌘V.", "In Logic's Piano Roll: ⌘A ⌘C. Here: ⌘V."))
-                way("folder", tr("Exportar a una carpeta", "Export to a folder"), tr("Archivo › Exportar › Selección como archivo MIDI… en Documentos › VSplit. Se abre solo.", "File › Export › Selection as MIDI File… into Documents › VSplit. It opens by itself."))
-                way("arrow.down.doc", tr("Soltar un .mid", "Drop a .mid"), tr("Arrástralo a la ventana o ábrelo con ⌘O.", "Drag it onto the window or open it with ⌘O."))
+                way("doc.on.clipboard", tr("Copiar y pegar", "Copy and paste"), tr("En el Piano Roll de Logic: ⌘A ⌘C. Aquí: ⌘V.", "In Logic's Piano Roll: ⌘A ⌘C. Here: ⌘V."), letter: "A")
+                way("folder", tr("Exportar a una carpeta", "Export to a folder"), tr("Archivo › Exportar › Selección como archivo MIDI… en Documentos › VSplit. Se abre solo.", "File › Export › Selection as MIDI File… into Documents › VSplit. It opens by itself."), letter: "B")
+                way("arrow.down.doc", tr("Soltar un .mid", "Drop a .mid"), tr("Arrástralo a la ventana o ábrelo con ⌘O.", "Drag it onto the window or open it with ⌘O."), letter: "C")
             }
+            .fixedSize(horizontal: false, vertical: true)
             Engraved(title: LocalizedStringKey(tr("Permisos", "Permissions")))
                 .padding(.top, 4)
             let _ = tick
@@ -85,7 +87,7 @@ struct OnboardingView: View {
             PermissionRow(icon: "folder", title: tr("Carpeta Documentos › VSplit", "Documents › VSplit folder"),
                           detail: tr("Para ver los MIDI que exportes desde Logic.", "To see the MIDI files you export from Logic."),
                           granted: Permissions.documents, button: tr("Dar acceso", "Allow")) { Permissions.requestDocuments() }
-            PermissionRow(icon: "bolt", title: tr("Abrir VSplit al exportar desde Logic", "Open VSplit when you export from Logic"),
+            PermissionRow(icon: "bolt", title: tr("Abrir VSplit al exportar desde Logic (opcional)", "Open VSplit when you export from Logic (optional)"),
                           detail: tr("Aunque VSplit esté cerrado: aparece encima de Logic con el archivo.", "Even if VSplit is closed: it appears over Logic with the file."),
                           granted: model.autoOpenFromFolder, button: tr("Activar", "Turn on")) { model.autoOpenFromFolder = true }
             Spacer(minLength: 0)
@@ -102,15 +104,15 @@ struct OnboardingView: View {
                 Knob(value: .constant(0), range: 0...4, defaultValue: 0, label: LocalizedStringKey(tr("Modo", "Mode")), display: "Auto", size: 50, step: 1)
                     .allowsHitTesting(false)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(tr("VOCES empieza en las que detecta. MODO: Auto (2 voces alternan de forma justa; 3 o más, por líneas: bajo, en medio, arriba), Alternar, Líneas, Registro, Canal. Se aplica al soltar el knob.",
-                            "VOICES starts at the number detected. MODE: Auto (2 voices alternate fairly; 3 or more split by lines: bass, middle, top), Alternate, Lines, Register, Channel. Applies when you let go."))
+                    Text(tr("VOCES empieza en las que detecta. MODO: Auto (2 voces alternan de forma justa; 3 o más, por líneas: bajo, en medio, arriba), Alternar, Líneas, Registro, Canal.",
+                            "VOICES starts at the number detected. MODE: Auto (2 voices alternate fairly; 3 or more split by lines: bass, middle, top), Alternate, Lines, Register, Channel."))
                         .font(.system(size: 12.5)).foregroundStyle(Theme.text.opacity(0.85)).fixedSize(horizontal: false, vertical: true)
                 }
             }
             HStack(alignment: .top, spacing: 10) {
-                keycap("B", tr("Pintar: todo lo que tocas pasa a la voz elegida (1–9)", "Paint: everything you touch goes to the chosen voice (1–9)"))
-                keycap("D", tr("Dibujar notas y alargarlas, con ajuste a la rejilla", "Draw notes and change their length, snapped to the grid"))
-                keycap("⌘A", tr("Y los atajos de Logic: ⌥↑↓, ⇧⌥↑↓, ⌥←→, Q, ⌫", "Plus Logic's shortcuts: ⌥↑↓, ⇧⌥↑↓, ⌥←→, Q, ⌫"))
+                toolTip(.brush, tr("Pintar: todo lo que tocas pasa a la voz elegida (1–9)", "Paint: everything you touch goes to the chosen voice (1–9)"))
+                toolTip(.draw, tr("Dibujar notas y alargarlas, con ajuste a la rejilla", "Draw notes and change their length, snapped to the grid"))
+                toolTip(.select, tr("Seleccionar, con los atajos de Logic: ⌘A, ⌥↑↓, ⇧⌥↑↓, ⌥←→, Q, ⌫", "Select, with Logic's shortcuts: ⌘A, ⌥↑↓, ⇧⌥↑↓, ⌥←→, Q, ⌫"))
             }
             Spacer(minLength: 0)
         }
@@ -125,13 +127,14 @@ struct OnboardingView: View {
                 way("square.stack.3d.up", tr("Todas", "All of them"), tr("El icono de arriba a la derecha crea una pista por voz.", "The icon at the top right makes one track per voice."))
                 way("eye.slash", tr("Se aparta", "Gets out of the way"), tr("Al sacar el arrastre VSplit se oculta para ver Logic, y vuelve al soltar.", "Dragging out hides VSplit so you see Logic; it comes back when you drop."))
             }
+            .fixedSize(horizontal: false, vertical: true)
             Text(tr("Suelta las voces en el compás que indica VSplit (el del clip original) y caerán en su sitio.",
                     "Drop the voices at the bar VSplit shows (where the original clip was) and they land in place."))
                 .font(.system(size: 12.5)).foregroundStyle(Theme.text.opacity(0.8))
             Toggle(isOn: $model.keepAbove) {
                 Text(tr("Mantener VSplit encima de Logic (también a pantalla completa)", "Keep VSplit above Logic (even in full screen)")).font(.system(size: 12.5))
             }
-            .toggleStyle(.switch).controlSize(.small)
+            .toggleStyle(.switch).controlSize(.small).tint(Theme.accent)
             Spacer(minLength: 0)
         }
     }
@@ -153,7 +156,13 @@ struct OnboardingView: View {
             }
             Spacer()
             if step < steps - 1 {
-                Button(tr("Siguiente", "Next")) { withAnimation(.easeOut(duration: 0.2)) { model.onboardingStep += 1 } }.buttonStyle(PillStyle(on: true, wide: true))
+                let _ = tick
+                let blocked = step == 1 && !(Permissions.accessibility && Permissions.documents)
+                Button(tr("Siguiente", "Next")) { withAnimation(.easeOut(duration: 0.2)) { model.onboardingStep += 1 } }
+                    .buttonStyle(PillStyle(on: true, wide: true))
+                    .disabled(blocked)
+                    .opacity(blocked ? 0.4 : 1)
+                    .help(blocked ? tr("Da los permisos para seguir", "Allow the permissions to continue") : "")
             } else {
                 Button(tr("Empezar", "Start")) { model.finishOnboarding() }.buttonStyle(PillStyle(on: true, wide: true))
             }
@@ -166,22 +175,26 @@ struct OnboardingView: View {
         Text(s.uppercased()).font(Theme.din(24)).kerning(2.5).padding(.top, 4)
     }
 
-    private func way(_ symbol: String, _ title: String, _ detail: String) -> some View {
+    private func way(_ symbol: String, _ title: String, _ detail: String, letter: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: symbol).font(.system(size: 17, weight: .light)).frame(width: 38, height: 38).plate(radius: 8, screws: false)
+            HStack(alignment: .top) {
+                Image(systemName: symbol).font(.system(size: 17, weight: .light)).frame(width: 38, height: 38).plate(radius: 8, screws: false)
+                Spacer()
+                if let letter { Text(letter).font(Theme.display(26)).foregroundStyle(Theme.text.opacity(0.35)).padding(.trailing, 4) }
+            }
             Text(title.uppercased()).font(Theme.din(13.5)).kerning(1.6).padding(.top, 2)
             Text(detail).font(.system(size: 11.5)).foregroundStyle(Theme.text.opacity(0.75)).fixedSize(horizontal: false, vertical: true)
         }
         .padding(12)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .plate(radius: 8)
     }
 
-    private func keycap(_ key: String, _ text: String) -> some View {
+    private func toolTip(_ tool: Tool, _ text: String) -> some View {
         HStack(alignment: .top, spacing: 8) {
-            Text(key).font(Theme.din(15)).padding(.top, 2).frame(minWidth: 30, minHeight: 26)
-                .background(RoundedRectangle(cornerRadius: 5).fill(Color.black.opacity(0.5)))
-                .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Theme.lineStrong))
+            Image(systemName: tool.symbol).font(.system(size: 13)).frame(width: 30, height: 28)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.5)))
+                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Theme.lineStrong))
             Text(text).font(.system(size: 11.5)).foregroundStyle(Theme.text.opacity(0.8)).fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -137,7 +137,24 @@ final class AppModel {
         if isPlaying { audio.reloadWhilePlaying(model: self) }
     }
     var instrument: PreviewInstrument = .piano { didSet { audio.setInstrument(instrument.rawValue) } }
-    var tempoBPM: Double = 120 { didSet { audio.setRate(rate) } }
+    var tempoBPM: Double = 120 {
+        didSet {
+            audio.setRate(rate)
+            // Notas pegadas: el tempo de abajo es el del clip (también el de los archivos exportados).
+            guard pastedText != nil, abs(tempoBPM - pasteOptions.bpm) > 0.001 else { return }
+            pasteTempoWork?.cancel()
+            let w = DispatchWorkItem { [weak self] in guard let self else { return }; self.reinterpretPaste(bpm: self.tempoBPM) }
+            pasteTempoWork = w
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: w)
+        }
+    }
+    private var pasteTempoWork: DispatchWorkItem?
+    /// Compás al inicio del clip.
+    var meterLabel: String {
+        if pastedText != nil { return "\(pasteOptions.numerator ?? 4)/\(pasteOptions.denominator)" }
+        guard let m = doc?.tempoMap.meter(atTick: 0) else { return "4/4" }
+        return "\(m.numerator)/\(m.denominator)"
+    }
     private var playTimer: Timer?
 
     // MARK: Diálogos
@@ -288,16 +305,21 @@ final class AppModel {
 
     /// Compás de Logic donde empezaba el MIDI exportado a la carpeta (se abre sin el espacio vacío de delante).
     private(set) var fileOriginBar: Int?
+    /// Clip recién llegado: se presenta con una pequeña animación antes de ver el editor.
+    var arrival: Arrival?
+    /// De dónde viene el próximo clip que se cargue (nil: recargas internas, sin animación).
+    private var arrivalSource: Arrival.Source?
 
     func open(url: URL, fromLogicExport: Bool = false) {
+        if arrivalSource == nil { arrivalSource = fromLogicExport ? .folder : .file }
         do {
             let data = try Data(contentsOf: url)
             if fromLogicExport {
                 let parsed = try MIDIParser.parse(data: data)
                 let (seq, bar) = LogicClipboard.trimmed(parsed)
                 pastedText = nil
-                try openSequence(seq, url: url, hash: SessionStore.hash(data), name: url.deletingPathExtension().lastPathComponent)
                 fileOriginBar = bar > 1 ? bar : nil
+                try openSequence(seq, url: url, hash: SessionStore.hash(data), name: url.deletingPathExtension().lastPathComponent)
                 return
             }
             fileOriginBar = nil
@@ -309,6 +331,7 @@ final class AppModel {
     }
 
     func open(data: Data, url: URL?, name: String) throws {
+        if arrivalSource == nil { arrivalSource = .file }
         pastedText = nil
         try openSequence(try MIDIParser.parse(data: data), url: url, hash: SessionStore.hash(data), name: name)
     }
@@ -370,6 +393,7 @@ final class AppModel {
             || (pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL])?.isEmpty == false
         if !hasClip, forwardToTextField(#selector(NSText.paste(_:))) { return }
         if hasClip, NSApp.keyWindow?.firstResponder is NSText { NSApp.keyWindow?.makeFirstResponder(controller.view) }
+        if hasClip { arrivalSource = .paste }
         if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], let u = urls.first {
             open(url: u); return
         }
@@ -425,6 +449,7 @@ final class AppModel {
         pasteOriginBar = bar
         let keep = SessionState(tracks: [1], voices: d.voices, assignments: d.notes.map(\.voiceID), params: params, export: exportOptions, activeVoice: activeVoiceID)
         let name = baseName
+        arrivalSource = nil
         load(seq, tracks: [1], url: nil, hash: fileHash, name: name, saved: keep)
     }
 
@@ -443,7 +468,8 @@ final class AppModel {
         if saved == nil {
             // Clip nuevo: tantas voces como líneas detectadas (Soprano, Alto, Tenor, Bajo…); el knob "Voces" lo cambia.
             let probe = SplitDocument(sequence: seq, tracks: tracks)
-            let n = NaturalVoices.detectCount(notes: probe.notes, indices: Array(probe.notes.indices), windowMs: params.chordWindowMs, tempoMap: probe.tempoMap)
+            if let m = defaultMode, params.mode != m { params.mode = m }
+            let n = defaultVoiceCount ?? NaturalVoices.detectCount(notes: probe.notes, indices: Array(probe.notes.indices), windowMs: params.chordWindowMs, tempoMap: probe.tempoMap)
             initialVoices = NaturalVoices.defaultVoices(count: n)
             if alternates(voiceCount: n) { for i in initialVoices.indices { initialVoices[i].name = Voice.defaultName(index: i) } }
         }
@@ -473,6 +499,10 @@ final class AppModel {
         updateWindow()
         audio.invalidate()
         controller.fitToContent()
+        if let src = arrivalSource {
+            arrivalSource = nil
+            arrival = Arrival(source: src, document: ed.document, name: name, originBar: pastedText != nil ? pasteOriginBar : fileOriginBar)
+        }
     }
 
     // MARK: - Cambios
@@ -648,6 +678,27 @@ final class AppModel {
         }
         perform(d.voicesCommand(vs, name: String(localized: "Split: \(m.title)"), reassign: computeSplit(indices: Array(d.notes.indices), voices: vs))
                 ?? d.assignCommand(pairs: computeSplit(indices: Array(d.notes.indices)), name: String(localized: "Split: \(m.title)")))
+    }
+
+    // MARK: Voces y modo por defecto (menú ⋯)
+
+    /// Con cuántas voces empieza un clip nuevo; nil: las que se detectan.
+    var defaultVoiceCount: Int? = UserDefaults.standard.object(forKey: "defaultVoiceCount") as? Int {
+        didSet { UserDefaults.standard.set(defaultVoiceCount, forKey: "defaultVoiceCount") }
+    }
+    /// Modo con el que empieza un clip nuevo; nil: el último usado.
+    var defaultMode: SplitMode? = UserDefaults.standard.string(forKey: "defaultMode").flatMap(SplitMode.init(rawValue:)) {
+        didSet { UserDefaults.standard.set(defaultMode?.rawValue, forKey: "defaultMode") }
+    }
+
+    func setCurrentAsDefault() {
+        defaultVoiceCount = voices.count
+        defaultMode = params.mode
+    }
+
+    func clearDefault() {
+        defaultVoiceCount = nil
+        defaultMode = nil
     }
 
     // MARK: Número de voces (knob)
@@ -1134,6 +1185,7 @@ final class AppModel {
     }
 
     func presentError(_ title: String, _ message: String) {
+        arrivalSource = nil
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = title
